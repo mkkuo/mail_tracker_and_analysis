@@ -1,14 +1,20 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php'; // Added
+require_once 'dbconnect.php';
 
 if ($_SESSION['user_role'] != 1) {
   echo "❌ 無權操作";
   exit;
 }
 
-$action = $_POST['action'] ?? '';
-$uid = intval($_POST['uid'] ?? 0);
+// IMPORTANT: Verify CSRF for ALL POST actions handled by this script.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf_or_die(); // Added
+}
+
+$action = $_POST['action'] ?? $_GET['action'] ?? ''; // action can come from GET for edit display
+$uid = intval($_POST['uid'] ?? $_GET['uid'] ?? 0);   // uid can also come from GET for edit display
 
 // 啟用 / 停用帳號
 if ($action === 'toggle') {
@@ -71,7 +77,7 @@ if ($action === 'edit') {
         <option value="5" <?= $atype == 5 ? 'selected' : '' ?>>內部協作</option>
         <option value="7" <?= $atype == 7 ? 'selected' : '' ?>>一般使用者</option>
       </select>
-
+      <?php csrf_input_field(); ?>
       <button type="submit" class="btn">💾 儲存修改</button>
     </form>
   </body>

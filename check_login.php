@@ -1,6 +1,13 @@
 <?php
-require 'dbconnect.php';
-session_start();
+// dbconnect.php includes error_handler.php, so it should be first.
+require_once 'dbconnect.php';
+session_start(); // Must be after error_handler.php is loaded if error_handler.php also tries to manage sessions (it does)
+
+// Note: Login form should also have CSRF protection.
+// require_once 'csrf_guard.php';
+// verify_csrf_or_die();
+// This part is commented out as it's outside the scope of "require_once" task,
+// but login.php and check_login.php should be updated for CSRF in a separate step.
 
 $email = $_POST['email'] ?? '';
 $password = $_POST['password'] ?? '';

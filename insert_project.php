@@ -1,7 +1,9 @@
 <?php
 // insert_project.php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php'; // Needs to be after auth.php if auth.php starts session
+verify_csrf_or_die(); // Call this early
+require_once 'dbconnect.php';
 
 $name = $_POST['name'] ?? '';
 $desc = $_POST['description'] ?? '';

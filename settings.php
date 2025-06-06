@@ -1,10 +1,12 @@
 <?php
 require 'auth.php';
+require_once 'csrf_guard.php'; // After auth.php
 require 'dbconnect.php';
 
 $user_id = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf_or_die(); // Verify CSRF for this POST action
     $type = $_POST['type'];
     $smtp_host = $_POST['smtp_host'];
     $smtp_port = $_POST['smtp_port'];
@@ -112,25 +114,25 @@ $settings = $stmt->fetch(PDO::FETCH_ASSOC);
     </select>
 
     <label>SMTP 主機</label>
-    <input type="text" name="smtp_host" value="<?= $settings['smtp_host'] ?? '' ?>">
+    <input type="text" name="smtp_host" value="<?= htmlspecialchars($settings['smtp_host'] ?? '') ?>">
 
     <label>SMTP Port</label>
-    <input type="number" name="smtp_port" value="<?= $settings['smtp_port'] ?? '587' ?>">
+    <input type="number" name="smtp_port" value="<?= htmlspecialchars($settings['smtp_port'] ?? '587') ?>">
 
     <label>SMTP 帳號</label>
-    <input type="text" name="smtp_user" value="<?= $settings['smtp_user'] ?? '' ?>">
+    <input type="text" name="smtp_user" value="<?= htmlspecialchars($settings['smtp_user'] ?? '') ?>">
 
     <label>SMTP 密碼</label>
-    <input type="password" name="smtp_pass" value="<?= $settings['smtp_pass'] ?? '' ?>">
+    <input type="password" name="smtp_pass" value="<?= htmlspecialchars($settings['smtp_pass'] ?? '') ?>">
 
     <label>寄件人名稱</label>
-    <input type="text" name="sender_name" value="<?= $settings['sender_name'] ?? '' ?>">
+    <input type="text" name="sender_name" value="<?= htmlspecialchars($settings['sender_name'] ?? '') ?>">
 
     <label>寄件人 Email</label>
-    <input type="email" name="sender_email" value="<?= $settings['sender_email'] ?? '' ?>">
+    <input type="email" name="sender_email" value="<?= htmlspecialchars($settings['sender_email'] ?? '') ?>">
 
     <label><input type="checkbox" name="use_tls" <?= ($settings['use_tls'] ?? 1) ? 'checked' : '' ?>> 使用 TLS</label>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">儲存設定</button>
   </form>
 </div>

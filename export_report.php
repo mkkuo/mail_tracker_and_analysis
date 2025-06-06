@@ -1,6 +1,6 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'dbconnect.php';
 
 header('Content-Type: text/csv; charset=UTF-8');
 header('Content-Disposition: attachment; filename="project_report.csv"');

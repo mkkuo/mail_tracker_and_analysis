@@ -1,6 +1,7 @@
 <?php
 require 'auth.php';
 require 'dbconnect.php';
+require_once 'csrf_guard.php';
 
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['user_role'];
@@ -105,6 +106,7 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
            value="<?= date('Y-m-d\TH:i', strtotime('+10 minutes')) ?>">
 
     <br>
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">建立排程</button>
   </form>
 </div>

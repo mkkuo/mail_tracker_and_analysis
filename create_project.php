@@ -1,5 +1,10 @@
 <?php
-require 'auth.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php';
+// dbconnect.php is not strictly needed here as this page only displays a form
+// and the form action 'insert_project.php' will handle DB interaction.
+// However, if there were project types or other DB-driven elements on this form,
+// it would be included: require_once 'dbconnect.php';
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +64,7 @@ require 'auth.php';
 
     <label>專案描述：</label>
     <textarea name="description" rows="5"></textarea>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">建立專案</button>
   </form>
 </div>

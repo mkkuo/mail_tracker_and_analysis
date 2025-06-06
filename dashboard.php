@@ -1,6 +1,6 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'dbconnect.php';
 
 $current_user_id = $_SESSION['user_id'];
 $current_user_role = $_SESSION['user_role'];

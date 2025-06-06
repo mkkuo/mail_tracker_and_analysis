@@ -1,6 +1,9 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'dbconnect.php';
+// Note: This script performs a state-changing operation (delete) via GET.
+// It should be converted to a POST request with CSRF protection.
+// require_once 'csrf_guard.php'; // verify_csrf_or_die(); (if it were POST)
 
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['user_role'];

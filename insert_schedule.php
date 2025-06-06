@@ -1,6 +1,8 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php'; // Needs to be after auth.php
+verify_csrf_or_die(); // Call this early
+require_once 'dbconnect.php';
 
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['user_role'];

@@ -1,10 +1,12 @@
 <?php
 require 'auth.php';
+require_once 'csrf_guard.php'; // After auth.php
 require 'dbconnect.php';
 
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['user_role'];
 $msg = '';
+$msg_type = ''; // Initialize message type
 
 // 專案清單
 if ($user_role === 'admin') {
@@ -17,25 +19,70 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // CSV 上傳
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv']) && isset($_POST['project_id'])) {
+  verify_csrf_or_die(); // Verify CSRF for this POST action
   $project_id = $_POST['project_id'];
-  $file = $_FILES['csv']['tmp_name'];
 
-  if (is_uploaded_file($file)) {
-    $handle = fopen($file, 'r');
-    $count = 0;
-    while (($data = fgetcsv($handle)) !== false) {
-      if (count($data) >= 2) {
-        $name = trim($data[0]);
-        $email = trim($data[1]);
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-          $stmt = $pdo->prepare("INSERT INTO recipients (project_id, name, email) VALUES (?, ?, ?)");
-          $stmt->execute([$project_id, $name, $email]);
-          $count++;
+  if (isset($_FILES['csv']['error']) && $_FILES['csv']['error'] !== UPLOAD_ERR_OK) {
+    $msg_type = 'error';
+    switch ($_FILES['csv']['error']) {
+      case UPLOAD_ERR_INI_SIZE:
+      case UPLOAD_ERR_FORM_SIZE:
+        $msg = "❌ 檔案過大，超過伺服器或表單允許的上限。";
+        break;
+      case UPLOAD_ERR_NO_FILE:
+        $msg = "❌ 沒有選擇檔案。";
+        break;
+      case UPLOAD_ERR_PARTIAL:
+        $msg = "❌ 檔案僅部分上傳。";
+        break;
+      case UPLOAD_ERR_NO_TMP_DIR:
+        $msg = "❌ 找不到暫存資料夾。";
+        break;
+      case UPLOAD_ERR_CANT_WRITE:
+        $msg = "❌ 檔案寫入失敗。";
+        break;
+      case UPLOAD_ERR_EXTENSION:
+        $msg = "❌ PHP 擴充功能導致檔案上傳停止。";
+        break;
+      default:
+        $msg = "❌ 檔案上傳失敗，請稍後再試。";
+        break;
+    }
+  } elseif (!is_uploaded_file($_FILES['csv']['tmp_name'])) {
+    $msg_type = 'error';
+    $msg = "❌ 無效的上傳檔案請求。";
+  } else {
+    $file_tmp_path = $_FILES['csv']['tmp_name'];
+    $file_type = mime_content_type($file_tmp_path);
+    $allowed_types = ['text/csv', 'application/csv', 'text/plain'];
+
+    if (!in_array($file_type, $allowed_types)) {
+      $msg_type = 'error';
+      $msg = "❌ 檔案格式錯誤 (" . htmlspecialchars($file_type) . ")，僅允許上傳 CSV 檔案。";
+    } else {
+      // Proceed with CSV processing
+      $handle = fopen($file_tmp_path, 'r');
+      $count = 0;
+      if ($handle !== FALSE) {
+        while (($data = fgetcsv($handle)) !== false) {
+          if (count($data) >= 2) {
+            $name = trim($data[0]);
+            $email = trim($data[1]);
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+              $stmt = $pdo->prepare("INSERT INTO recipients (project_id, name, email) VALUES (?, ?, ?)");
+              $stmt->execute([$project_id, $name, $email]);
+              $count++;
+            }
+          }
         }
+        fclose($handle);
+        $msg_type = 'success';
+        $msg = "✅ 匯入成功，共新增 $count 筆收件人。";
+      } else {
+        $msg_type = 'error';
+        $msg = "❌ 無法開啟上傳的 CSV 檔案。";
       }
     }
-    fclose($handle);
-    $msg = "匯入成功，共新增 $count 筆收件人。";
   }
 }
 
@@ -101,9 +148,22 @@ $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
       border-radius: 4px;
     }
     .msg {
-      color: green;
+      /* color: green; // Base color removed, will be set by .success or .error */
       font-weight: bold;
       margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+    }
+    .msg.success {
+      color: #155724;
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+    .msg.error {
+      color: #721c24;
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
     }
     table {
       margin-top: 30px;
@@ -139,7 +199,7 @@ $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="main">
   <h2>📂 上傳收件人名單</h2>
 
-  <?php if ($msg): ?><div class="msg"><?= $msg ?></div><?php endif; ?>
+  <?php if ($msg): ?><div class="msg <?= htmlspecialchars($msg_type) ?>"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
 
   <form method="post" enctype="multipart/form-data">
     <label>選擇專案：</label>
@@ -152,7 +212,7 @@ $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <label>選擇 CSV 檔案（name,email）：</label>
     <input type="file" name="csv" accept=".csv" required>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">上傳名單</button>
   </form>
 

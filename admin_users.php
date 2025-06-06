@@ -1,6 +1,7 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php'; // After auth.php
+require_once 'dbconnect.php';
 
 if ($_SESSION['user_role'] != 1) {
   echo "❌ 無權存取此頁面。";
@@ -11,6 +12,7 @@ $msg = '';
 
 // 新增帳號
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
+  verify_csrf_or_die(); // Verify CSRF for this POST action
   $email = $_POST['email'];
   $password = $_POST['password'];
   $atype = intval($_POST['atype']);
@@ -106,7 +108,7 @@ $role_map = [
       <option value="5">內部協作者</option>
       <option value="7">一般使用者</option>
     </select>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">➕ 新增帳號</button>
   </form>
 
@@ -131,6 +133,7 @@ $role_map = [
           <form method="post" action="admin_users_update.php" style="display:inline;">
             <input type="hidden" name="uid" value="<?= $u['id'] ?>">
             <input type="hidden" name="action" value="toggle">
+            <?php csrf_input_field(); ?>
             <button class="btn btn-sm <?= $u['status'] ? 'btn-danger' : '' ?>">
               <?= $u['status'] ? '停用' : '啟用' ?>
             </button>
@@ -138,6 +141,7 @@ $role_map = [
           <form method="post" action="admin_users_update.php" style="display:inline;">
             <input type="hidden" name="uid" value="<?= $u['id'] ?>">
             <input type="hidden" name="action" value="edit">
+            <?php csrf_input_field(); ?>
             <button class="btn btn-sm">編輯</button>
           </form>
         </td>

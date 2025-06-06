@@ -1,6 +1,7 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php';
+require_once 'dbconnect.php';
 
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['user_role'];
@@ -109,7 +110,7 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <label>信件內容：</label>   {{tracking_code}} 
     <textarea name="content" id="editor"></textarea>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">儲存範本</button>
   </form>
 </div>

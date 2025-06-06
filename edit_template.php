@@ -1,6 +1,7 @@
 <?php
-require 'auth.php';
-require 'dbconnect.php';
+require_once 'auth.php';
+require_once 'csrf_guard.php';
+require_once 'dbconnect.php';
 
 $template_id = $_GET['id'] ?? null;
 $user_id = $_SESSION['user_id'];
@@ -119,7 +120,7 @@ if ($user_role === 'admin') {
 
     <label>信件內容：</label>
     <textarea name="content" id="editor"><?= htmlspecialchars($template['content']) ?></textarea>
-
+    <?php csrf_input_field(); ?>
     <button type="submit" class="btn">儲存變更</button>
   </form>
 </div>
