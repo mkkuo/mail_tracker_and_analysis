@@ -71,7 +71,14 @@ if (count($queues) === 0) {
 
 // 撈取 SMTP 設定
 $mail_settings = [];
-$stmt = $pdo->query("SELECT * FROM mail_settings");
+$stmt = $pdo->query("
+    SELECT ms.user_id, ms.type,
+           sa.smtp_host, sa.smtp_port, sa.smtp_user, sa.smtp_pass,
+           sa.sender_name, sa.sender_email, sa.use_tls
+    FROM mail_settings ms
+    LEFT JOIN smtp_accounts sa
+      ON ms.user_id = sa.user_id AND ms.type = sa.provider
+");
 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
   $mail_settings[$row['user_id']] = $row;
 }
