@@ -1,0 +1,1 @@
+<?php HEADER('Location: http://mat.onsky.com.tw/mat/login.php');?>
